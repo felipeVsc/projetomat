@@ -114,9 +114,9 @@ void gerarChavePublica(){
 	int chave[2];	   //pra gravar a chave no txt
 	int chave_lida[2]; //para ler a chave do txt
 
-	printf("P e Q:\n");
 	while (pq_validos != 1) //só da continuidade se os numeros forem primos
 	{
+		printf("P e Q: ");
 		scanf("%d%d", &p, &q);
 		if (ehPrimo(p) && ehPrimo(q))
 		{
@@ -127,14 +127,14 @@ void gerarChavePublica(){
 			int n = p * q;			   //primeira parte da chave
 			chave[0] = n;
 
-			printf("E:\n");
 			while (e_validos != 1) // só da continuidade se for coprimo
 			{
+				printf("E: ");
 				scanf("%d", &e); //segunda parte da chave
 
 				if ((calculaMDC(e, z)) == 1)
 				{
-					printf("É válido\n");
+					printf("É válido\n\n");
 					e_validos = 1;
 
 					chave[1] = e;
@@ -152,7 +152,7 @@ void gerarChavePublica(){
 
 			keyFile = fopen("key.txt", "r");				//abre o arquivo pra leitura
 			fread(&chave_lida, sizeof(int), 2, keyFile); //lê os valores do txt e escreve-os no segundo vetor
-			printf("Sua chave pública: (%d,%d)\n\n", chave_lida[0], chave_lida[1]);
+			printf("Chave pública [ %d, %d ] gravada em key.txt\n", chave_lida[0], chave_lida[1]);
 			fclose(keyFile); //fecha arquivo
 		}
 		else
@@ -345,6 +345,18 @@ int expoModRapida(int M, int e, int n)
 
 void encriptar()
 {
+	//ler a chave
+	FILE *keyFile;
+	int key[2];
+
+	keyFile = fopen("key.txt", "r");
+	fread(&key, sizeof(int), 2, keyFile);
+	fclose(keyFile);
+
+	int n = key[0];
+	int e = key[1];
+	printf("Encriptando usando a chave pública [ %d, %d ]\n", n, e);
+
 	//ler e codificar a string
 	char mensagem[5000];
 	printf("Mensagem: ");
@@ -364,16 +376,6 @@ void encriptar()
 	encodeString(mensagem, codificada, tamanho);
 
 	//encriptar a string codificada em numeros 
-	FILE *keyFile;
-	int key[2];
-
-	keyFile = fopen("key.txt", "r");
-	fread(&key, sizeof(int), 2, keyFile);
-	printf("Chave pública contida no arquivo -> n: %d, e: %d\n", key[0], key[1]);
-	fclose(keyFile);
-
-	int n = key[0];
-	int e = key[1];
 
 	int encriptada[tamanho];
 
@@ -384,8 +386,8 @@ void encriptar()
 		encriptada[i] = C;
 	}
 
-	printArray(codificada, tamanho);
-	printArray(encriptada, tamanho);
+	//printArray(codificada, tamanho);
+	//printArray(encriptada, tamanho);
 
 	//write encypted string to message.txt
 	FILE *msgFile;
@@ -395,6 +397,8 @@ void encriptar()
 }
 
 void decriptar(){
+	printf("Decriptando a mensagem em message.txt\n");
+
 	//ler a mensagem encriptada e codificada
 	FILE *msgFile;
 	int encriptada[5000];
@@ -407,14 +411,13 @@ void decriptar(){
 	//decriptar a mensagem codificada
 	int codificada[5000];
 	int p, q, e;
-	printf("P, Q e E:\n");
+	printf("P, Q e E: ");
 	scanf("%d %d %d", &p, &q, &e);
 
 	int pq = (p * q);
 	int p1q1 = (p - 1) * (q - 1);
 
 	int d = calculaInversoMod(e, p1q1);
-	printf("Inverso: %d\n", d);
 
 	int M;
 	for (int i = 0; i < tamanho; i++)
@@ -423,8 +426,8 @@ void decriptar(){
 		codificada[i] = M;
 	}
 
-	printArray(encriptada, tamanho);
-	printArray(codificada, tamanho);
+	//printArray(encriptada, tamanho);
+	//printArray(codificada, tamanho);
 
 	//decodificar a mensagem
 	char mensagem[tamanho + 1];
@@ -437,13 +440,13 @@ void decriptar(){
 void menu(){
 	int op;
 	int shouldContinue = 1;
+	printf("\n--------------MENU--------------\n");
+	printf("Opção 0: Sair\nOpção 1: Gerar chave pública\nOpção 2: Encriptar\nOpção 3: Decriptar\n");
+	printf("---------------------------------\n");
 
 	while (shouldContinue)
 	{
-		printf("\n--------------MENU--------------\n");
-		printf("Opção 0: Sair\nOpção 1: Gerar chave pública\nOpção 2: Encriptar\nOpção 3: Decriptar\n");
-		printf("---------------------------------\n");
-		printf("Opção: ");
+		printf("\nOpção: ");
 		scanf("%i", &op);
 
 		switch (op)
@@ -456,53 +459,28 @@ void menu(){
 		case 1:
 			printf("\n-------GERAR-CHAVE-PÚBLICA-------\n");
 			gerarChavePublica();
-			printf("\n");
+			printf("---------------------------------\n");
 			break;
 
 		case 2:
 			printf("\n-------ENCRIPTAR-MENSAGEM--------\n");
 			encriptar();
-			printf("\n");
+			printf("---------------------------------\n");
 			break;
 
 		case 3:
 			printf("\n-------DECRIPTAR-MENSAGEM--------\n");
 			decriptar();
-			printf("\n");
+			printf("---------------------------------\n");
 			break;
 
 		default:
-			printf("%d não é uma opção válida.\n\n", op);
+			printf("%d não é uma opção válida.\n", op);
 			break;
 		}
 	}
 }
 
 int main(){
-	/*TESTE - expoModRapidaPot2(int M, int e, int n) sendo M**e mod n
-	long M, e, n;
-	scanf("%ld %ld %ld", &M, &e, &n);
-	printf("%ld\n", expoModRapidaPot2(M, e, n));
-	//FUNÇÃO VALIDADA*/
-
-	/*TESTE - expoentesBinariosDeInteiro(int n, int res[]) sendo M**e mod n
-	int n, res[32] = {0};
-	scanf("%d", &n);
-	int i = expoentesBinariosDeInteiro(n, res);
-	printArray(res, i);
-	//FUNÇÃO VALIDADA*/
-
-	/*TESTE - potenciaInt(int base, int expoente) sendo b**e
-	int n;
-	scanf("%d", &n);
-	printf("%d\n", potenciaInt(2, n));
-	//FUNÇÃO VALIDADA*/
-
-	/*TESTE - expoModRapida(int M, int e, int n) sendo M**e mod n
-	int M, e, n;
-	scanf("%d %d %d", &M, &e, &n);
-	printf("%d\n", expoModRapida(M, e, n));
-	//FUNÇÃO VALIDADA*/
-
 	menu();
 }
