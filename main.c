@@ -5,39 +5,6 @@
 
 char letras[27] = {'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z', ' '};
 
-void printArray(int array[], int length)
-{
-	printf("[");
-	for (int i = 0; i < length; i++)
-	{
-		if (i != length - 1)
-		{
-			printf(" %d,", array[i]);
-		}
-		else
-		{
-			printf(" %d", array[i]);
-		}
-	}
-	printf("]\n");
-}
-
-void printArrayOnlySpaced(int array[], int length)
-{
-	for (int i = 0; i < length; i++)
-	{
-		if (i)
-		{
-			printf(" %d", array[i]);
-		}
-		else
-		{
-			printf("%d", array[i]);
-		}
-	}
-	printf("\n");
-}
-
 //dado um caractere, retorna o número correspondente ao mesmo
 int encodeChar(char messagePiece){
 	if (messagePiece >= 65 && messagePiece <= 90){
@@ -111,8 +78,6 @@ int ehPrimo(int numero){
 void gerarChavePublica(){
 	FILE *keyFile;
 	int p, q, e, i, pq_validos, e_validos;
-	int chave[2];	   //pra gravar a chave no txt
-	int chave_lida[2]; //para ler a chave do txt
 
 	while (pq_validos != 1) //só da continuidade se os numeros forem primos
 	{
@@ -125,7 +90,6 @@ void gerarChavePublica(){
 
 			int z = (p - 1) * (q - 1); // e deve ser coprimo a isto
 			int n = p * q;			   //primeira parte da chave
-			chave[0] = n;
 
 			while (e_validos != 1) // só da continuidade se for coprimo
 			{
@@ -137,11 +101,22 @@ void gerarChavePublica(){
 					printf("Eh valido\n\n");
 					e_validos = 1;
 
-					chave[1] = e;
+					printf("Chave publica\nn: %d, e: %d\n", n, e);
 
-					keyFile = fopen("key.txt", "w");					  //cria o arquivo pra gravação
-					int res = fwrite(&chave, sizeof(int), 2, keyFile); //grava os valores do vetor no txt
-					fclose(keyFile);									  //fecha o arquivo
+					//calcula a quantidade de caracteres na string
+					int tamanho = snprintf(NULL, 0, "n: %d, e: %d", n, e);
+
+					//cria usando tamanho+1 pq tamanho não conta com o caractere final '\0'
+					char chave[tamanho + 1];
+					chave[tamanho] = '\0';
+					
+					//escreve a string resultante em chave
+					sprintf(chave, "n: %d, e: %d", n, e);
+
+					//grava no arquivo
+					keyFile = fopen("key.txt", "w");
+					fwrite(&chave, sizeof(char), tamanho+1, keyFile);
+					fclose(keyFile);									  
 				}
 				else
 				{
@@ -150,10 +125,7 @@ void gerarChavePublica(){
 				}
 			}
 
-			keyFile = fopen("key.txt", "r");				//abre o arquivo pra leitura
-			fread(&chave_lida, sizeof(int), 2, keyFile); //lê os valores do txt e escreve-os no segundo vetor
-			printf("Chave publica gravada em key.txt\n", chave_lida[0], chave_lida[1]);
-			fclose(keyFile); //fecha arquivo
+			printf("A chave foi gravada em key.txt\n");
 		}
 		else
 		{
@@ -245,7 +217,6 @@ int calculaInversoMod(int x, int y){
 	return coeficientesInverso(quocientes, contador, mod);
 }
 
-
 //exponenciação modular rápida de potências de 2, é componente de expoModRapida
 long expoModRapidaPot2(long M, long e, long n){ 
 	//C = M**e mod n
@@ -259,7 +230,6 @@ long expoModRapidaPot2(long M, long e, long n){
 		c = (M * M) % n;
 	}
 
-	
 	return c;
 }
 
@@ -300,29 +270,23 @@ int expoentesBinariosDeInteiro(int n, int res[]){
 	return counter; //retorna quantidade de expoentes
 }
 
+//C = M**e mod n
 int expoModRapida(int M, int e, int n)
 {
-	//C = M**e mod n
-	
 	long long c = 1;
 
 	int lenExpBinE, expBinE[32]; //expoentes binários de e
 	lenExpBinE = expoentesBinariosDeInteiro(e, expBinE);
-
 
 	for (int i = 0; i < lenExpBinE; i++){
 		if(expBinE[i] == 1){
 			c *= M;
 		} else {
 			long res = expoModRapidaPot2(M, expBinE[i], n);
-			
 			c *= res;
-			
 		}
 	}
 	c = c % n;
-
-	
 
 	int resposta = c;
 	return resposta;
@@ -357,23 +321,22 @@ void encriptar()
 		bugs estranhos de C, como sempre
 	*/
 
-	int tamanho = strlen(mensagem) - 1; 
+	int tamanho = strlen(mensagem) - 1;
 	int codificada[tamanho];
 
 	encodeString(mensagem, codificada, tamanho);
 
-	//encriptar a string codificada em numeros 
+	//encriptar a string codificada em numeros
 
 	int encriptada[tamanho];
 
 	int C;
-	for (int i = 0; i < tamanho; i++){
+	for (int i = 0; i < tamanho; i++)
+	{
 		int M = codificada[i];
 		C = expoModRapida(M, e, n);
 		encriptada[i] = C;
 	}
-
-	
 
 	//write encypted string to message.txt
 	FILE *msgFile;
@@ -412,15 +375,13 @@ void decriptar(){
 		codificada[i] = M;
 	}
 
-	
-
 	//decodificar a mensagem
 	char mensagem[tamanho + 1];
 	mensagem[tamanho] = '\0';
 
 	decodeString(codificada, mensagem, tamanho);
 	msgFile = fopen("message.txt", "w");
-	fwrite(mensagem, sizeof(int), tamanho, msgFile); //change encoded to encrypted 
+	fwrite(mensagem, sizeof(char), tamanho, msgFile);
 	fclose(msgFile);
 }
 

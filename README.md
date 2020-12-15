@@ -1,5 +1,5 @@
 # projetomat
-Projeto Criptografia
+Projeto Criptografia RSA 
 
 Alunos: 
 Emily Brito de Oliveira
