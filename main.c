@@ -246,6 +246,7 @@ int calculaInversoMod(int x, int y){
 }
 
 //dados n e M, verifica se n é uma potência de M
+//esta função foi pensada para expoModRapida mas como vou fazer expoModRapida ser mais geral... não será utilizada... 
 int aPotenciaDeB(int a, int b){
 	if(a == b){
 		return 1;
@@ -260,37 +261,95 @@ int aPotenciaDeB(int a, int b){
 	}
 }
 
-int expoModRapidaPot2(int M, int e, int n){
+//exponenciação modular rápida de potências de 2, é componente de expoModRapida
+long expoModRapidaPot2(long M, long e, long n){ 
 	//C = M**e mod n
-	int c;
+	long c;
+
+	//printf("\nM:%ld e:%ld n:%ld\n", M, e, n);
 	if (e != 2){
-		int res = expoModRapidaPot2(M, e / 2, n);
-		c = (res*res)%n;
+		long res = expoModRapidaPot2(M, (e/2), n);
+		c = (res * res) % n;
 	} else {
 		c = (M * M) % n;
 	}
+
+	
 	return c;
 }
 
-int* getBinaryFromNumber(){
+//base**expoente
+long potenciaInt(long base, long expoente){
+	if (expoente == 0){
+		return 1;
+	}
 
+	if (base == 1){
+		return 1;
+	}
+
+	long result = base;
+	for (long i = 0; i < expoente-1; i++){
+		result *= base;
+	}
+
+	return result;
 }
 
-/*int expoModRapida(int M, int e, int n)
+int expoentesBinariosDeInteiro(int n, int res[]){
+	int counter = 0;
+
+	for (int i = 0; i < 32; i++){
+		if(n){ //n != 0
+			if(n%2){ //bit i = 1
+				res[counter] = potenciaInt(2,i);
+				counter++;
+			}
+			n = n/2;
+		}
+		else{
+			break;
+		}
+	}
+
+	return counter; //retorna quantidade de expoentes
+}
+
+int expoModRapida(int M, int e, int n)
 {
 	//C = M**e mod n
-	int C;
+	//printf("Iniciou expoModRapida(%d,%d,%d)\n", M, e, n);
+	long long c = 1;
 
+	int lenExpBinE, expBinE[32]; //expoentes binários de e
+	lenExpBinE = expoentesBinariosDeInteiro(e, expBinE);
+
+
+	for (int i = 0; i < lenExpBinE; i++){
+		if(expBinE[i] == 1){
+			c *= M;
+		} else {
+			long res = expoModRapidaPot2(M, expBinE[i], n);
+			//printf("-> expoModRapidaPot2(%d,%d,%d) = %ld\n", M, expBinE[i], n, res);
+			c *= res;
+			//printf("    -> %lld\n", c);
+		}
+	}
+	c = c % n;
+
+	//printf("resultado: %lld\n\n",c);
+
+	int resposta = c;
+	return resposta;
 }
-*/
 
 void encriptar()
 {
-	//scan and encode the string
-	char string[5000];
+	//ler e codificar a string
+	char mensagem[5000];
 	printf("Mensagem: ");
-	fgets(string, sizeof(string), stdin);
-	fgets(string, sizeof(string), stdin);
+	fgets(mensagem, sizeof(mensagem), stdin);
+	fgets(mensagem, sizeof(mensagem), stdin);
 	/*
 		A linha duplicada previne que o resultado
 		de fgets seja o \n que scanf deixou no 
@@ -299,52 +358,80 @@ void encriptar()
 		bugs estranhos de C, como sempre
 	*/
 
-	int length = strlen(string) - 1; //because fgets adds \n as the last character
-	int encoded[length];
+	int tamanho = strlen(mensagem) - 1; //pq fgets adiciona como ultimo caractere
+	int codificada[tamanho];
 
-	encodeString(string, encoded, length);
+	encodeString(mensagem, codificada, tamanho);
 
-	//encrypt the encoded string
-	/*FILE *keyFile;
+	//encriptar a string codificada em numeros 
+	FILE *keyFile;
 	int key[2];
 
 	keyFile = fopen("key.txt", "r");
 	fread(&key, sizeof(int), 2, keyFile);
-	printf("Chave pública contida no arquivo: [ %d, %d ]\n\n", key[0], key[1]);
-	fclose(keyFile);*/
+	printf("Chave pública contida no arquivo -> n: %d, e: %d\n", key[0], key[1]);
+	fclose(keyFile);
 
-	
+	int n = key[0];
+	int e = key[1];
+
+	int encriptada[tamanho];
+
+	int C;
+	for (int i = 0; i < tamanho; i++){
+		int M = codificada[i];
+		C = expoModRapida(M, e, n);
+		encriptada[i] = C;
+	}
+
+	printArray(codificada, tamanho);
+	printArray(encriptada, tamanho);
+
 	//write encypted string to message.txt
 	FILE *msgFile;
 	msgFile = fopen("message.txt", "w");
-	fwrite(&encoded, sizeof(int), length, msgFile); //change encoded to encrypted 
+	fwrite(&encriptada, sizeof(int), tamanho, msgFile); //change encoded to encrypted 
 	fclose(msgFile);
-	printArrayOnlySpaced(encoded, length);
 }
 
 void decriptar(){
-	//read the encoded and encrypted string
+	//ler a mensagem encriptada e codificada
 	FILE *msgFile;
-	int numbers[5000];
-	int length;
+	int encriptada[5000];
+	int tamanho;
 
 	msgFile = fopen("message.txt", "r");
-	length = fread(&numbers, sizeof(int), 5000, msgFile);
+	tamanho = fread(&encriptada, sizeof(int), 5000, msgFile);
 	fclose(msgFile);
 
-	//decrypt the encoded string
-	/*missing 
-	block 
-	of 
-	code 
-	here*/
+	//decriptar a mensagem codificada
+	int codificada[5000];
+	int p, q, e;
+	printf("P, Q e E:\n");
+	scanf("%d %d %d", &p, &q, &e);
 
-	//decode string
-	char result[length + 1];
-	result[length] = '\0';
+	int pq = (p * q);
+	int p1q1 = (p - 1) * (q - 1);
 
-	decodeString(numbers, result, length);
-	printf("Mensagem: %s\n", result);
+	int d = calculaInversoMod(e, p1q1);
+	printf("Inverso: %d\n", d);
+
+	int M;
+	for (int i = 0; i < tamanho; i++)
+	{
+		M = expoModRapida(encriptada[i], d, pq);
+		codificada[i] = M;
+	}
+
+	printArray(encriptada, tamanho);
+	printArray(codificada, tamanho);
+
+	//decodificar a mensagem
+	char mensagem[tamanho + 1];
+	mensagem[tamanho] = '\0';
+
+	decodeString(codificada, mensagem, tamanho);
+	printf("Mensagem: %s\n", mensagem);
 }
 
 void menu(){
@@ -353,7 +440,7 @@ void menu(){
 
 	while (shouldContinue)
 	{
-		printf("--------------MENU--------------\n");
+		printf("\n--------------MENU--------------\n");
 		printf("Opção 0: Sair\nOpção 1: Gerar chave pública\nOpção 2: Encriptar\nOpção 3: Decriptar\n");
 		printf("---------------------------------\n");
 		printf("Opção: ");
@@ -367,22 +454,19 @@ void menu(){
 			break;
 
 		case 1:
-			system("clear");
-			printf("-------GERAR-CHAVE-PÚBLICA-------\n");
+			printf("\n-------GERAR-CHAVE-PÚBLICA-------\n");
 			gerarChavePublica();
 			printf("\n");
 			break;
 
 		case 2:
-			system("clear");
-			printf("-------ENCRIPTAR-MENSAGEM--------\n");
+			printf("\n-------ENCRIPTAR-MENSAGEM--------\n");
 			encriptar();
 			printf("\n");
 			break;
 
 		case 3:
-			system("clear");
-			printf("-------DECRIPTAR-MENSAGEM--------\n");
+			printf("\n-------DECRIPTAR-MENSAGEM--------\n");
 			decriptar();
 			printf("\n");
 			break;
@@ -395,17 +479,30 @@ void menu(){
 }
 
 int main(){
-	/*TESTE - aPotenciaDeB(int n, int M)
-	int n, M;
-	scanf("%d %d", &n, &M);
-	printf(ehPotenciaDeM(n, M) ? "É potência\n" : "Não é potência\n");
-	*/
-
 	/*TESTE - expoModRapidaPot2(int M, int e, int n) sendo M**e mod n
+	long M, e, n;
+	scanf("%ld %ld %ld", &M, &e, &n);
+	printf("%ld\n", expoModRapidaPot2(M, e, n));
+	//FUNÇÃO VALIDADA*/
+
+	/*TESTE - expoentesBinariosDeInteiro(int n, int res[]) sendo M**e mod n
+	int n, res[32] = {0};
+	scanf("%d", &n);
+	int i = expoentesBinariosDeInteiro(n, res);
+	printArray(res, i);
+	//FUNÇÃO VALIDADA*/
+
+	/*TESTE - potenciaInt(int base, int expoente) sendo b**e
+	int n;
+	scanf("%d", &n);
+	printf("%d\n", potenciaInt(2, n));
+	//FUNÇÃO VALIDADA*/
+
+	/*TESTE - expoModRapida(int M, int e, int n) sendo M**e mod n
 	int M, e, n;
 	scanf("%d %d %d", &M, &e, &n);
-	printf("%d", expoModRapidaPot2(M, e, n));
-	*/
+	printf("%d\n", expoModRapida(M, e, n));
+	//FUNÇÃO VALIDADA*/
 
 	menu();
 }
