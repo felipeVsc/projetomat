@@ -120,7 +120,7 @@ void gerarChavePublica(){
 		scanf("%d%d", &p, &q);
 		if (ehPrimo(p) && ehPrimo(q))
 		{
-			printf("São válidos\n\n");
+			printf("São validos\n\n");
 			pq_validos = 1;
 
 			int z = (p - 1) * (q - 1); // e deve ser coprimo a isto
@@ -134,7 +134,7 @@ void gerarChavePublica(){
 
 				if ((calculaMDC(e, z)) == 1)
 				{
-					printf("É válido\n\n");
+					printf("Eh valido\n\n");
 					e_validos = 1;
 
 					chave[1] = e;
@@ -145,19 +145,19 @@ void gerarChavePublica(){
 				}
 				else
 				{
-					printf("Não é válido\n\n");
+					printf("Nao eh valido\n\n");
 					e_validos = 0;
 				}
 			}
 
 			keyFile = fopen("key.txt", "r");				//abre o arquivo pra leitura
 			fread(&chave_lida, sizeof(int), 2, keyFile); //lê os valores do txt e escreve-os no segundo vetor
-			printf("Chave pública [ %d, %d ] gravada em key.txt\n", chave_lida[0], chave_lida[1]);
+			printf("Chave publica gravada em key.txt\n", chave_lida[0], chave_lida[1]);
 			fclose(keyFile); //fecha arquivo
 		}
 		else
 		{
-			printf("Não são válidos\n\n");
+			printf("Nao sao validos\n\n");
 			pq_validos = 0;
 		}
 	}
@@ -245,21 +245,6 @@ int calculaInversoMod(int x, int y){
 	return coeficientesInverso(quocientes, contador, mod);
 }
 
-//dados n e M, verifica se n é uma potência de M
-//esta função foi pensada para expoModRapida mas como vou fazer expoModRapida ser mais geral... não será utilizada... 
-int aPotenciaDeB(int a, int b){
-	if(a == b){
-		return 1;
-	}
-	else
-	{
-		if (a%b == 0){
-			return aPotenciaDeB(a/b, b);
-		} else {
-			return 0;
-		}
-	}
-}
 
 //exponenciação modular rápida de potências de 2, é componente de expoModRapida
 long expoModRapidaPot2(long M, long e, long n){ 
@@ -318,7 +303,7 @@ int expoentesBinariosDeInteiro(int n, int res[]){
 int expoModRapida(int M, int e, int n)
 {
 	//C = M**e mod n
-	//printf("Iniciou expoModRapida(%d,%d,%d)\n", M, e, n);
+	
 	long long c = 1;
 
 	int lenExpBinE, expBinE[32]; //expoentes binários de e
@@ -330,14 +315,14 @@ int expoModRapida(int M, int e, int n)
 			c *= M;
 		} else {
 			long res = expoModRapidaPot2(M, expBinE[i], n);
-			//printf("-> expoModRapidaPot2(%d,%d,%d) = %ld\n", M, expBinE[i], n, res);
+			
 			c *= res;
-			//printf("    -> %lld\n", c);
+			
 		}
 	}
 	c = c % n;
 
-	//printf("resultado: %lld\n\n",c);
+	
 
 	int resposta = c;
 	return resposta;
@@ -345,17 +330,19 @@ int expoModRapida(int M, int e, int n)
 
 void encriptar()
 {
+	// pedir a chave aqui
 	//ler a chave
-	FILE *keyFile;
+
+	
 	int key[2];
 
-	keyFile = fopen("key.txt", "r");
-	fread(&key, sizeof(int), 2, keyFile);
-	fclose(keyFile);
+	printf("DIGITE AS CHAVES N, E: ");
+	scanf("%d %d",&key[0],&key[1]);
+	
 
 	int n = key[0];
 	int e = key[1];
-	printf("Encriptando usando a chave pública [ %d, %d ]\n", n, e);
+	printf("Encriptando usando a chave publica [ %d, %d ]\n", n, e);
 
 	//ler e codificar a string
 	char mensagem[5000];
@@ -370,7 +357,7 @@ void encriptar()
 		bugs estranhos de C, como sempre
 	*/
 
-	int tamanho = strlen(mensagem) - 1; //pq fgets adiciona como ultimo caractere
+	int tamanho = strlen(mensagem) - 1; 
 	int codificada[tamanho];
 
 	encodeString(mensagem, codificada, tamanho);
@@ -386,8 +373,7 @@ void encriptar()
 		encriptada[i] = C;
 	}
 
-	//printArray(codificada, tamanho);
-	//printArray(encriptada, tamanho);
+	
 
 	//write encypted string to message.txt
 	FILE *msgFile;
@@ -426,38 +412,39 @@ void decriptar(){
 		codificada[i] = M;
 	}
 
-	//printArray(encriptada, tamanho);
-	//printArray(codificada, tamanho);
+	
 
 	//decodificar a mensagem
 	char mensagem[tamanho + 1];
 	mensagem[tamanho] = '\0';
 
 	decodeString(codificada, mensagem, tamanho);
-	printf("Mensagem: %s\n", mensagem);
+	msgFile = fopen("message.txt", "w");
+	fwrite(mensagem, sizeof(int), tamanho, msgFile); //change encoded to encrypted 
+	fclose(msgFile);
 }
 
 void menu(){
 	int op;
 	int shouldContinue = 1;
 	printf("\n--------------MENU--------------\n");
-	printf("Opção 0: Sair\nOpção 1: Gerar chave pública\nOpção 2: Encriptar\nOpção 3: Decriptar\n");
+	printf("Opcao 0: Sair\nOpcao 1: Gerar chave pública\nOpcao 2: Encriptar\nOpcao 3: Decriptar\n");
 	printf("---------------------------------\n");
 
 	while (shouldContinue)
 	{
-		printf("\nOpção: ");
+		printf("\nOpcao: ");
 		scanf("%i", &op);
 
 		switch (op)
 		{
 		case 0:
-			printf("\nExecução finalizada.\n");
+			printf("\nExecucao finalizada.\n");
 			shouldContinue = 0;
 			break;
 
 		case 1:
-			printf("\n-------GERAR-CHAVE-PÚBLICA-------\n");
+			printf("\n-------GERAR-CHAVE-PUBLICA-------\n");
 			gerarChavePublica();
 			printf("---------------------------------\n");
 			break;
@@ -475,7 +462,7 @@ void menu(){
 			break;
 
 		default:
-			printf("%d não é uma opção válida.\n", op);
+			printf("%d não eh uma opcao valida.\n", op);
 			break;
 		}
 	}
