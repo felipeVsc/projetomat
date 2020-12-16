@@ -85,7 +85,7 @@ void gerarChavePublica(){
 		scanf("%d%d", &p, &q);
 		if (ehPrimo(p) && ehPrimo(q))
 		{
-			printf("São validos\n\n");
+			printf("Sao validos\n\n");
 			pq_validos = 1;
 
 			int z = (p - 1) * (q - 1); // e deve ser coprimo a isto
@@ -337,12 +337,20 @@ void encriptar()
 		C = expoModRapida(M, e, n);
 		encriptada[i] = C;
 	}
-
-	//write encypted string to message.txt
+	
 	FILE *msgFile;
 	msgFile = fopen("message.txt", "w");
-	fwrite(&encriptada, sizeof(int), tamanho, msgFile); //change encoded to encrypted 
+	for (int controle = 0; controle < tamanho; controle++){
+		fprintf(msgFile,"%d\n",encriptada[controle]);
+	}	
+	
+	//write encypted string to message.txt
+	//fwrite(encriptada, sizeof(encriptada), 1, msgFile);
+	//fprintf(msgFile,"%d ",&encriptada);
+//	fwrite(&encriptada, sizeof(encriptada), 1, msgFile); //change encoded to encrypted 
 	fclose(msgFile);
+
+
 }
 
 void decriptar(){
@@ -350,11 +358,20 @@ void decriptar(){
 
 	//ler a mensagem encriptada e codificada
 	FILE *msgFile;
+	int numeroTeste;
 	int encriptada[5000];
-	int tamanho;
-
+	int tamanho = 0;
 	msgFile = fopen("message.txt", "r");
-	tamanho = fread(&encriptada, sizeof(int), 5000, msgFile);
+	for (int teste1 = 0; teste1 < 50; ++teste1) {
+		if (fscanf(msgFile, "%d", &encriptada[teste1]) == 1) {
+			tamanho++;
+		} 
+		else {
+			break; 
+		}
+	}
+
+
 	fclose(msgFile);
 
 	//decriptar a mensagem codificada
@@ -389,7 +406,7 @@ void menu(){
 	int op;
 	int shouldContinue = 1;
 	printf("\n--------------MENU--------------\n");
-	printf("Opcao 0: Sair\nOpcao 1: Gerar chave pública\nOpcao 2: Encriptar\nOpcao 3: Decriptar\n");
+	printf("Opcao 0: Sair\nOpcao 1: Gerar chave publica\nOpcao 2: Encriptar\nOpcao 3: Decriptar\n");
 	printf("---------------------------------\n");
 
 	while (shouldContinue)
