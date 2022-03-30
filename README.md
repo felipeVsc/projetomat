@@ -1,4 +1,4 @@
-# projetomat
+# Projeto de Criptografia RSA - Matemática Discreta
 Projeto Criptografia RSA 
 
 Alunos: 
